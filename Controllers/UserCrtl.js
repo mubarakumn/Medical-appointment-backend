@@ -85,6 +85,15 @@ const getAllUsers = async (req, res) => {
         res.status(500).json({ message: "Error fetching Users", error });
     }
 };
+// ✅ Get all Doctors 
+const getAllDoctors = async (req, res) => {
+    try {
+        const doctors = await UserModel.find({ role: 'doctor' }).select('-password');
+        res.status(200).json(doctors);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching Users", error });
+    }
+};
 
 // ✅ Update User 
 const updateUser = async (req, res) => {
@@ -131,6 +140,7 @@ module.exports = {
     loginUser,
     getUser,
     getAllUsers,
+    getAllDoctors,
     updateUser,
     deleteUserAccount
 };

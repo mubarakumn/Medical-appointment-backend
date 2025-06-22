@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerUser, loginUser, getAllUsers, getUser, updateUser, deleteUserAccount } = require('../Controllers/UserCrtl');
+const { registerUser, loginUser, getAllUsers, getAllDoctors, getUser, updateUser, deleteUserAccount } = require('../Controllers/UserCrtl');
 const authMiddleware = require('../MiddleWares/authMiddleware');
 
 const router = express.Router();
@@ -9,7 +9,8 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 router.get('/:id', getUser); 
-router.get('/all', getAllUsers); // Users can view all doctors 
+router.get('/all', getAllUsers); 
+router.get('/all/doctors', getAllDoctors); // Users can view all doctors 
 
 // Protected routes (require authentication)
 router.patch('/profile', authMiddleware, updateUser);
