@@ -26,11 +26,11 @@ const UserSchema = new mongoose.Schema({
     },
     specialization: {
         type: String,
-        required: true
-    }, // e.g., "Cardiologist", "Dermatologist"
+        required: function() { return this.role === 'doctor'; }
+    },
     experience: {
         type: Number,
-        required: true
+        required: function() { return this.role === 'doctor'; }
     },
     dateOfBirth: {
         type: Date,
@@ -46,7 +46,11 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
     availableSlots: [{ type: Date }], // Array of available time slots
-    appointments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }], // Booked appointments
+    appointments: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Appointment'
+        }], // List of booked appointments
     ratings: { type: Number, default: 0 },
     profileStatus: {
         type: String,
@@ -71,11 +75,6 @@ const UserSchema = new mongoose.Schema({
             // required: true
         }
     },
-    appointments: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Appointment'
-        }], // List of booked appointments
 }, { timestamps: true });
 
 module.exports = mongoose.model('user', UserSchema);

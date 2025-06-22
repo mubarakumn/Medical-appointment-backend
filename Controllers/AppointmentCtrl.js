@@ -44,7 +44,7 @@ const updateAppointment = async (req, res) => {
 
         // Update status or notes
         if (status) appointment.status = status;
-        if (status === "cancelled" ) appointment.timeCancelled = new Date.now();
+        if (status === "cancelled" ) appointment.timeCancelled = new Date();
         if (notes) appointment.notes = notes;
 
         await appointment.save();
@@ -68,7 +68,7 @@ const getAppointments = async (req, res) => {
         console.log(patientId);
         console.log(filter);
         
-        const appointments = await AppointmentModel.find(!filter === "undefined"? filter : {})
+        const appointments = await AppointmentModel.find(Object.keys(filter).length ? filter : {})
         .populate('patientId', 'name email phone')
         .populate('doctorId', 'name specialization');
         

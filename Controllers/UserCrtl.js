@@ -79,7 +79,7 @@ const getUser = async (req, res) => {
 // ✅ Get all Users 
 const getAllUsers = async (req, res) => {
     try {
-        const Users = await DoctorModel.find().select('-password'); // Exclude password from response
+        const Users = await UserModel.find().select('-password'); // Exclude password from response
         res.status(200).json(Users);
     } catch (error) {
         res.status(500).json({ message: "Error fetching Users", error });
