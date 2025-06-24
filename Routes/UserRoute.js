@@ -10,7 +10,7 @@ router.post('/login', loginUser);
 
 router.get('/:id', getUser); 
 router.get('/all', getAllUsers); 
-router.get('/all/doctors', getAllDoctors); // Users can view all doctors 
+router.get('/doctors', getAllDoctors); // Users can view all doctors 
 
 // Protected routes (require authentication)
 router.patch('/profile', authMiddleware, updateUser);
