@@ -6,6 +6,19 @@ const bookAppointment = async (req, res) => {
   try {
     const { doctorId, date, reason } = req.body;
 
+    const doctor = await User.findById(doctorId);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+    // 🔍 Check if slot exists and is not booked
+    const slot = doctor.availableSlots.find(
+      s => new Date(s.date).getTime() === new Date(date).getTime() && !s.isBooked
+    );
+
+    if (!slot) {
+      return res.status(400).json({ message: "Selected slot is not available." });
+    }
+
+    // ✅ Book appointment
     const newAppointment = new Appointment({
       patient: req.user.id,
       doctor: doctorId,
@@ -14,11 +27,17 @@ const bookAppointment = async (req, res) => {
     });
 
     await newAppointment.save();
-    res.status(201).json({ message: "Appointment booked", appointment: newAppointment });
+
+    // 🟡 Mark slot as booked
+    slot.isBooked = true;
+    await doctor.save();
+
+    res.status(201).json({ message: "Appointment booked successfully", appointment: newAppointment });
   } catch (error) {
     res.status(500).json({ message: "Error booking appointment", error });
   }
 };
+
 
 // ✅ Get all appointments for a user
 const getMyAppointments = async (req, res) => {
