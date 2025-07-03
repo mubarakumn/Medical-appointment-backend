@@ -5,6 +5,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const UserRoute = require('../Routes/UserRoute');
 const AppointmentRoute = require('../Routes/AppointmentRoute');
+const SlotRoute = require('./Routes/SlotRoute');
 const authMiddleware = require('../MiddleWares/authMiddleware');
 
 dotenv.config();
@@ -23,6 +24,8 @@ app.use(cors({
 
 app.use('/api/users', UserRoute);
 app.use('/api/appointments', AppointmentRoute);
+app.use('/api/slots', SlotRoute);
+
 
 app.get('/api/checkauth', authMiddleware, (req, res) => {
   res.status(200).json({ userData: req.user, message: "Authenticated" });
