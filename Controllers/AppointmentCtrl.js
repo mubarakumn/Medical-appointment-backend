@@ -1,102 +1,95 @@
-const AppointmentModel = require('../Models/AppointmentModel');
-const UserModel = require('../Models/UserModel');
+const Appointment = require('../Models/AppointmentModel');
+const User = require('../Models/UserModel');
 
-// Book an appointment
+// ✅ Book appointment
 const bookAppointment = async (req, res) => {
-    try {
-        const { patientId, doctorId, dateTime, symptoms, notes } = req.body;
+  try {
+    const { doctorId, date, reason } = req.body;
 
-        // Check if patient exists
-        const patient = await UserModel.findById(patientId);
-        if (!patient) return res.status(404).json({ message: 'Patient not found' });
+    const newAppointment = new Appointment({
+      patient: req.user.id,
+      doctor: doctorId,
+      date,
+      reason
+    });
 
-        // Check if doctor exists
-        const doctor = await UserModel.findById(doctorId);
-        if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
-
-        // Check if doctor is available at this time
-        const existingAppointment = await AppointmentModel.findOne({ doctorId, dateTime });
-        if (existingAppointment) {
-            return res.status(400).json({ message: 'Doctor is not available at this time' });
-        }
-
-        // Create new appointment
-        const appointment = new AppointmentModel({ patientId, doctorId, dateTime, symptoms, notes });
-        await appointment.save();
-
-        res.status(201).json({ message: 'Appointment booked successfully', appointment });
-    } catch (error) {
-        res.status(500).json({ message: 'Error booking appointment', error });
-    }
+    await newAppointment.save();
+    res.status(201).json({ message: "Appointment booked", appointment: newAppointment });
+  } catch (error) {
+    res.status(500).json({ message: "Error booking appointment", error });
+  }
 };
 
-// Update appointment (status or notes)
+// ✅ Get all appointments for a user
+const getMyAppointments = async (req, res) => {
+  try {
+    const appointments = await Appointment.find({
+      $or: [
+        { patient: req.user.id },
+        { doctor: req.user.id }
+      ]
+    }).populate('patient', 'name email').populate('doctor', 'name specialization');
+    
+    res.status(200).json(appointments);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching appointments", error });
+  }
+};
+
+// ✅ Update appointment (e.g. date, reason, status, notes)
 const updateAppointment = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status, notes } = req.body;
+  try {
+    const { id } = req.params;
+    const { date, reason, status, notes } = req.body;
 
-        const appointment = await AppointmentModel.findById(id);
-        if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
-
-        // if cancelled 
-        if(appointment.status === "cancelled") return res.json({ message: 'Appointment cancelled!'});
-
-        // Update status or notes
-        if (status) appointment.status = status;
-        if (status === "cancelled" ) appointment.timeCancelled = new Date();
-        if (notes) appointment.notes = notes;
-
-        await appointment.save();
-        res.json({ message: 'Appointment updated successfully', appointment });
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating appointment', error });
+    // Only patient or doctor involved can update
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
     }
+
+    // Optional: Check if req.user is involved
+    if (
+      appointment.patient.toString() !== req.user.id &&
+      appointment.doctor.toString() !== req.user.id
+    ) {
+      return res.status(403).json({ message: "Unauthorized to update this appointment" });
+    }
+
+    // Update fields
+    if (date) appointment.date = date;
+    if (reason) appointment.reason = reason;
+    if (notes) appointment.notes = notes;
+    if (status) appointment.status = status;
+
+    const updated = await appointment.save();
+
+    res.status(200).json({ message: "Appointment updated", appointment: updated });
+
+  } catch (error) {
+    res.status(500).json({ message: "Error updating appointment", error });
+  }
 };
 
+// ✅ Cancel appointment
+const cancelAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appointment = await Appointment.findByIdAndUpdate(id, {
+      status: 'cancelled'
+    }, { new: true });
 
-// Get appointments (all, or filtered by doctor/patient)
-const getAppointments = async (req, res) => {
-    try {
-        const { doctorId, patientId } = req.query;
-        let filter = {};
-        
-        if (doctorId) filter.doctorId = doctorId;
-        if (patientId) filter.patientId = patientId;
-        
-        console.log(doctorId);
-        console.log(patientId);
-        console.log(filter);
-        
-        const appointments = await AppointmentModel.find(Object.keys(filter).length ? filter : {})
-        .populate('patientId', 'name email phone')
-        .populate('doctorId', 'name specialization');
-        
-        res.json(appointments);
-        
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching appointments', error });
-    }
+    if (!appointment) return res.status(404).json({ message: "Appointment not found" });
+
+    res.status(200).json({ message: "Appointment cancelled", appointment });
+  } catch (error) {
+    res.status(500).json({ message: "Error cancelling appointment", error });
+  }
 };
-
-// Cancel appointment
-// const cancelAppointment = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-
-//         const appointment = await AppointmentModel.findById(id);
-//         if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
-
-//         await appointment.deleteOne();
-//         res.json({ message: 'Appointment canceled successfully' });
-//     } catch (error) {
-//         res.status(500).json({ message: 'Error canceling appointment', error });
-//     }
-// };
 
 module.exports = {
-    bookAppointment,
-    updateAppointment,
-    getAppointments,
-    // cancelAppointment
+  bookAppointment,
+  getMyAppointments,
+  updateAppointment,
+  cancelAppointment
 };
