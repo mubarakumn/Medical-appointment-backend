@@ -24,7 +24,7 @@ app.use(cors({
 }));
 
 // API Routes
-app.use('/the users', UserRoute);
+app.use('/users', UserRoute);
 app.use('/appointments', AppointmentRoute);
 app.use('/slots', SlotRoute);
 
