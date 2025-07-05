@@ -35,21 +35,23 @@ const registerUser = async (req, res) => {
       experience
     } = req.body;
 
+
+      if (!name || !email || !phone || !password || !dateOfBirth || !gender || !address) {
+        return res.status(400).json({ message: "All fields are required." });
+      }
+
     // Check for existing user
     const existingUser = await UserModel.findOne({ $or: [{ email }, { phone }] });
     if (existingUser) {
       return res.status(400).json({ message: "Email or phone already registered." });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create new user
     const newUser = new UserModel({
       name,
       email,
       phone,
-      password: hashedPassword,
+      password,
       dateOfBirth,
       gender,
       address,
@@ -84,7 +86,9 @@ const loginUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    console.log(password, user.password);
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log(isMatch);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
