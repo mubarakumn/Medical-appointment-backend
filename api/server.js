@@ -38,5 +38,12 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// --- HYBRID PATTERN ---
+// Only listen when running locally (node server.js), not when imported by Vercel
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Local server listening on port ${PORT}`));
+}
+
+// Always export the app for serverless use
+module.exports = app;
