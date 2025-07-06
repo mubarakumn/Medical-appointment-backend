@@ -24,9 +24,9 @@ app.use(cors({
 }));
 
 // API Routes
-app.use('/users', UserRoute);
-app.use('/appointments', AppointmentRoute);
-app.use('/slots', SlotRoute);
+app.use('/api/users', UserRoute);
+app.use('/api/appointments', AppointmentRoute);
+app.use('/api/slots', SlotRoute);
 
 // Auth Test
 app.get('/api/checkauth', authMiddleware, (req, res) => {
