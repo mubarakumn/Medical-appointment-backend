@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const UserModel = require('../Models/UserModel');
+const Appointment = require('../Models/AppointmentModel');
+
 
 dotenv.config();
 
@@ -165,6 +167,27 @@ const updateUser = async (req, res) => {
   }
 };
 
+// GET /api/doctor/stats
+const getDoctorStats = async (req, res) => {
+  try {
+    const doctorId = req.user.id;
+
+    const appointments = await Appointment.countDocuments({ doctor: doctorId });
+    const doctor = await UserModel.findById(doctorId);
+    const slots = doctor.availableSlots.length;
+
+    const patients = await Appointment.distinct('patient', { doctor: doctorId });
+
+    res.json({
+      appointments,
+      slots,
+      patients: patients.length,
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch stats' });
+  }
+};
+
 // ✅ Delete user account
 const deleteUserAccount = async (req, res) => {
   try {
@@ -182,5 +205,6 @@ module.exports = {
   getAllUsers,
   getAllDoctors,
   updateUser,
+  getDoctorStats,
   deleteUserAccount
 };
