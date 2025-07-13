@@ -1,4 +1,5 @@
 const Appointment = require('../Models/AppointmentModel');
+const NotificationModel = require('../Models/NotificationModel');
 const User = require('../Models/UserModel');
 
 // ✅ Book appointment
@@ -9,10 +10,12 @@ const bookAppointment = async (req, res) => {
     const doctor = await User.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
 
-    // 🔍 Check if slot exists and is not booked
-    const slot = doctor.availableSlots.find(
-      s => new Date(s.date).getTime() === new Date(date).getTime() && !s.isBooked
-    );
+    const requestedTime = new Date(new Date(date).toISOString()); // Normalize
+
+    const slot = doctor.availableSlots.find(s => {
+      const slotTime = new Date(s.date).toISOString();
+      return slotTime === requestedTime.toISOString() && !s.isBooked;
+    });
 
     if (!slot) {
       return res.status(400).json({ message: "Selected slot is not available." });
@@ -21,30 +24,44 @@ const bookAppointment = async (req, res) => {
     const existing = await Appointment.findOne({
       patient: req.user.id,
       doctor: doctorId,
-      date: new Date(date)
+      date: requestedTime,
     });
 
     if (existing) {
       return res.status(400).json({ message: "You already have an appointment at this time." });
     }
 
-
-    // ✅ Book appointment
     const newAppointment = new Appointment({
       patient: req.user.id,
       doctor: doctorId,
-      date,
+      date: requestedTime,
       reason
     });
 
     await newAppointment.save();
 
-    // 🟡 Mark slot as booked
+    // Update slot
     slot.isBooked = true;
+    doctor.markModified('availableSlots');
     await doctor.save();
+
+    // Doctor Notification
+    await NotificationModel.create({
+      userId: doctorId,
+      title: 'New Appointment',
+      text: `You have a new appointment on ${requestedTime.toLocaleString()}`,
+    });
+
+    // Patient Notification
+    await NotificationModel.create({
+      userId: req.user.id,
+      title: 'Appointment Booked',
+      text: `Your appointment with Dr. ${doctor.name} is on ${requestedTime.toLocaleString()}`,
+    });
 
     res.status(201).json({ message: "Appointment booked successfully", appointment: newAppointment });
   } catch (error) {
+    console.error("Booking Error:", error.message);
     res.status(500).json({ message: "Error booking appointment", error });
   }
 };

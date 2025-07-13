@@ -7,7 +7,8 @@ const {
   getUser,
   updateUser,
   getDoctorStats,
-  deleteUserAccount
+  deleteUserAccount,
+  setAvailability
 } = require('../Controllers/UserCrtl');
 const authMiddleware = require('../MiddleWares/authMiddleware');
 
@@ -18,9 +19,11 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.get('/all', getAllUsers);       // (Consider protecting this for admins)
 router.get('/doctors', getAllDoctors);
-router.get('/doctors/stats', getDoctorStats);
+router.get('/doctors/stats', authMiddleware, getDoctorStats);
+
 
 // Protected routes
+router.put('/doctors/availability', authMiddleware, setAvailability);
 router.patch('/profile', authMiddleware, updateUser);
 router.delete('/delete', authMiddleware, deleteUserAccount);
 

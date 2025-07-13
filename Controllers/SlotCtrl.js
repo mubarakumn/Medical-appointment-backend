@@ -18,7 +18,7 @@ const addSlot = async (req, res) => {
     const exists = doctor.availableSlots.some(s => new Date(s.date).getTime() === new Date(slot).getTime());
     if (exists) {
       return res.status(400).json({ message: 'Slot already exists.' });
-    }
+    } 
 
     doctor.availableSlots.push({ date: new Date(slot) });
     await doctor.save();

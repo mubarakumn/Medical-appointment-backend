@@ -9,6 +9,7 @@ const AppointmentRoute = require('../Routes/AppointmentRoute');
 const SlotRoute = require('../Routes/SlotRoute'); // fixed path
 
 const authMiddleware = require('../MiddleWares/authMiddleware');
+const NotificationModel = require('../Models/NotificationModel');
 
 dotenv.config();
 const app = express();
@@ -32,6 +33,13 @@ app.use('/api/slots', SlotRoute);
 app.get('/api/checkauth', authMiddleware, (req, res) => {
   res.status(200).json({ userData: req.user, message: "Authenticated" });
 });
+
+// Notifications
+app.get('/api/notifications', authMiddleware, async (req, res) => {
+  const notifications = await NotificationModel.find({ userId: req.user._id }).sort({ date: -1 });
+  res.json(notifications);
+});
+
 
 // Connect DB and Start Server
 mongoose.connect(process.env.MONGO_URI)

@@ -21,6 +21,39 @@ const generateToken = (user) => {
   );
 };
 
+// 🧰 Helper: Generate slots based on availability
+const generateSlots = (availability) => {
+  const result = [];
+  const today = new Date();
+  const daysToGenerate = 14; // next 2 weeks
+
+  for (let i = 0; i < daysToGenerate; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+    availability.forEach((rule) => {
+      if (rule.day === dayName) {
+        const [startH, startM] = rule.startTime.split(':').map(Number);
+        const [endH, endM] = rule.endTime.split(':').map(Number);
+
+        const start = new Date(date);
+        start.setHours(startH, startM, 0);
+        const end = new Date(date);
+        end.setHours(endH, endM, 0);
+
+        while (start < end) {
+          result.push({ date: new Date(start), isBooked: false });
+          start.setMinutes(start.getMinutes() + rule.duration);
+        }
+      }
+    });
+  }
+
+  return result;
+};
+
+
 // ✅ Register a new user (patient by default)
 const registerUser = async (req, res) => {
   try {
@@ -88,9 +121,8 @@ const loginUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    console.log(password, user.password);
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(isMatch);
+    // console.log(isMatch);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -172,19 +204,94 @@ const getDoctorStats = async (req, res) => {
   try {
     const doctorId = req.user.id;
 
-    const appointments = await Appointment.countDocuments({ doctor: doctorId });
     const doctor = await UserModel.findById(doctorId);
-    const slots = doctor.availableSlots.length;
 
-    const patients = await Appointment.distinct('patient', { doctor: doctorId });
+    if (!doctor || doctor.role !== 'doctor') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
 
-    res.json({
-      appointments,
-      slots,
-      patients: patients.length,
+    // Count appointments
+    const allAppointments = await Appointment.find({ doctor: doctorId }).populate('patient', 'name email');
+    const patientIds = new Set(allAppointments.map(app => app.patient._id.toString()));
+
+    // Filter for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const todayAppointments = allAppointments.filter(app => {
+      const appDate = new Date(app.date);
+      return appDate >= today && appDate < tomorrow;
     });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch stats' });
+
+    // Upcoming (future) appointments
+    const upcomingAppointments = allAppointments
+      .filter(app => new Date(app.date) > new Date())
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Format availability summary
+    const availabilitySummary = doctor.availability?.map(slot => ({
+      day: slot.day,
+      time: `${slot.startTime} - ${slot.endTime}`,
+    })) || [];
+
+    return res.status(200).json({
+      appointments: allAppointments.length,
+      slots: doctor.availableSlots.length,
+      patients: patientIds.size,
+      todayAppointments: todayAppointments.map(app => ({
+        patientName: app.patient.name,
+        date: app.date,
+      })),
+      upcomingAppointments: upcomingAppointments.slice(0, 5).map(app => ({
+        patientName: app.patient.name,
+        date: app.date,
+      })),
+      availabilitySummary,
+    });
+  } catch (error) {
+    console.error('Error fetching doctor stats:', error);
+    res.status(500).json({ message: 'Error fetching stats', error });
+  }
+};
+
+// ✅ Set doctor's availability and generate slots
+const setAvailability = async (req, res) => {
+  try {
+    if (req.user.role !== 'doctor') {
+      return res.status(403).json({ message: 'Only doctors can set availability.' });
+    }
+
+    const { availability } = req.body;
+
+    if (!Array.isArray(availability)) {
+      return res.status(400).json({ message: 'Availability must be an array.' });
+    }
+
+    const doctor = await UserModel.findById(req.user.id);
+
+    doctor.availability = availability;
+
+    // 🔄 Regenerate fresh slots from the new availability
+    const newSlots = generateSlots(availability);
+
+    // 🧹 Keep only existing booked slots
+    const bookedSlots = doctor.availableSlots.filter(s => s.isBooked);
+
+    // 💾 Replace unbooked slots with new ones
+    doctor.availableSlots = [...bookedSlots, ...newSlots];
+
+    await doctor.save();
+
+    res.status(200).json({
+      message: 'Availability set and slots generated.',
+      slots: doctor.availableSlots,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error setting availability.', error });
   }
 };
 
@@ -206,5 +313,6 @@ module.exports = {
   getAllDoctors,
   updateUser,
   getDoctorStats,
+  setAvailability,
   deleteUserAccount
 };

@@ -26,7 +26,14 @@ const UserSchema = new mongoose.Schema({
   dateOfBirth: { type: Date, required: true },
   gender: { type: String, enum: ['male', 'female', 'other'], required: true },
   address: { type: String, required: true },
-
+  availability: [
+    {
+      day: { type: String }, // e.g. "Monday", "Tuesday"
+      startTime: { type: String }, // e.g. "09:00"
+      endTime: { type: String },   // e.g. "17:00"
+      duration: { type: Number },  // in minutes, e.g. 30
+    }
+  ],
   availableSlots: [
     {
       date: Date,
