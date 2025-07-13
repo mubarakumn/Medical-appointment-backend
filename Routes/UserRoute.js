@@ -24,7 +24,7 @@ router.get('/doctors/stats', authMiddleware, getDoctorStats);
 
 // Protected routes
 router.put('/doctors/availability', authMiddleware, setAvailability);
-router.patch('/profile', authMiddleware, updateUser);
+router.patch('/update', authMiddleware, updateUser);
 router.delete('/delete', authMiddleware, deleteUserAccount);
 
 // Dynamic route (keep last)
