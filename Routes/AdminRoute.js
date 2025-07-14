@@ -1,6 +1,6 @@
 // routes/adminRoutes.js
 const express = require('express');
-const { authMiddleware, adminOnly } = require('../middleware/auth');
+const { authMiddleware, adminOnly } = require('../MiddleWares/authMiddleware');
 const {
   getAdminStats,
   getAllDoctors,
