@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
+const AdminRoute = require('../Routes/AdminRoute');
 const UserRoute = require('../Routes/UserRoute');
 const AppointmentRoute = require('../Routes/AppointmentRoute');
 const SlotRoute = require('../Routes/SlotRoute'); // fixed path
@@ -25,6 +26,7 @@ app.use(cors({
 }));
 
 // API Routes
+app.use('/api/admin', AdminRoute);
 app.use('/api/users', UserRoute);
 app.use('/api/appointments', AppointmentRoute);
 app.use('/api/slots', SlotRoute);
@@ -36,7 +38,8 @@ app.get('/api/checkauth', authMiddleware, (req, res) => {
 
 // Notifications
 app.get('/api/notifications', authMiddleware, async (req, res) => {
-  const notifications = await NotificationModel.find({ userId: req.user._id }).sort({ date: -1 });
+  const notifications = await NotificationModel.find({ userId: req.user._id });
+  console.log(notifications);
   res.json(notifications);
 });
 
