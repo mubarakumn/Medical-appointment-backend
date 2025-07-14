@@ -257,6 +257,12 @@ const getDoctorStats = async (req, res) => {
   }
 };
 
+// ✅ Get all appointments for a user (patient)
+const getUserAppointment = async (req, res) => {
+  const appointments = await Appointment.find({ patient: req.user.id });
+  res.json(appointments);
+};
+
 // ✅ Set doctor's availability and generate slots
 const setAvailability = async (req, res) => {
   try {
@@ -313,6 +319,7 @@ module.exports = {
   getAllDoctors,
   updateUser,
   getDoctorStats,
+  getUserAppointment,
   setAvailability,
   deleteUserAccount
 };

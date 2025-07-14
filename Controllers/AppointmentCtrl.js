@@ -10,11 +10,13 @@ const bookAppointment = async (req, res) => {
     const doctor = await User.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
 
-    const requestedTime = new Date(new Date(date).toISOString()); // Normalize
+    const requestedTime = new Date(date);
+    requestedTime.setSeconds(0, 0); // Remove seconds and ms
 
     const slot = doctor.availableSlots.find(s => {
-      const slotTime = new Date(s.date).toISOString();
-      return slotTime === requestedTime.toISOString() && !s.isBooked;
+      const slotTime = new Date(s.date);
+      slotTime.setSeconds(0, 0); // Normalize slot time too
+      return slotTime.getTime() === requestedTime.getTime() && !s.isBooked;
     });
 
     if (!slot) {
@@ -65,6 +67,7 @@ const bookAppointment = async (req, res) => {
     res.status(500).json({ message: "Error booking appointment", error });
   }
 };
+
 
 
 // ✅ Get all appointments for a user
