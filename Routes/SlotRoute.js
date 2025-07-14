@@ -1,6 +1,6 @@
 const express = require('express');
 const { addSlot, removeSlot, getDoctorSlots, getCalendarSlots } = require('../Controllers/SlotCtrl');
-const authMiddleware = require('../MiddleWares/authMiddleware');
+const {authMiddleware}  = require('../MiddleWares/authMiddleware');
 
 const router = express.Router();
 

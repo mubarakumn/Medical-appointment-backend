@@ -8,7 +8,7 @@ const {
   getAllAppointments,
   deleteUser,
   deleteAppointment,
-} = require('../controllers/adminController');
+} = require('../Controllers/AdminCtrl');
 
 const router = express.Router();
 
@@ -20,3 +20,4 @@ router.delete('/users/:id', authMiddleware, adminOnly, deleteUser);
 router.delete('/appointments/:id', authMiddleware, adminOnly, deleteAppointment);
 
 module.exports = router;
+ 

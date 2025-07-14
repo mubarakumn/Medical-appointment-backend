@@ -10,11 +10,12 @@ const {
   deleteUserAccount,
   setAvailability,
   getUserAppointment
-} = require('../Controllers/UserCrtl');
-const authMiddleware = require('../MiddleWares/authMiddleware');
+} = require('../Controllers/UserCtrl');
+const {authMiddleware} = require('../MiddleWares/authMiddleware');
 
 const router = express.Router();
 
+console.log(typeof authMiddleware); // Should log 'function'
 // Public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);

@@ -9,7 +9,7 @@ const UserRoute = require('../Routes/UserRoute');
 const AppointmentRoute = require('../Routes/AppointmentRoute');
 const SlotRoute = require('../Routes/SlotRoute'); // fixed path
 
-const authMiddleware = require('../MiddleWares/authMiddleware');
+const {authMiddleware} = require('../MiddleWares/authMiddleware');
 const NotificationModel = require('../Models/NotificationModel');
 
 dotenv.config();
