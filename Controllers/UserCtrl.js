@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const UserModel = require('../Models/UserModel');
 const Appointment = require('../Models/AppointmentModel');
+const NotificationModel = require('../Models/NotificationModel');
 
 
 dotenv.config();
@@ -188,6 +189,13 @@ const updateUser = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Notify the user about the update
+    await NotificationModel.create({
+      userId: doctorId,
+      title: 'Profile Updated',
+      text: `Your profile has been updated successfully.`,
+    });
 
     res.status(200).json({
       message: "Profile updated successfully",

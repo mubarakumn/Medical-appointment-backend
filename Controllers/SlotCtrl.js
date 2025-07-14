@@ -71,7 +71,6 @@ const removeSlot = async (req, res) => {
 };
 
 
-
 // ✅ Get available slots for a doctor
 const getDoctorSlots = async (req, res) => {
   try {

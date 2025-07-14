@@ -69,7 +69,6 @@ const bookAppointment = async (req, res) => {
 };
 
 
-
 // ✅ Get all appointments for a user
 const getMyAppointments = async (req, res) => {
   try {
@@ -159,6 +158,19 @@ const cancelAppointment = async (req, res) => {
     // Mark appointment as cancelled
     appointment.status = 'cancelled';
     await appointment.save();
+
+    // Notify patient and doctor
+    await NotificationModel.create({
+      userId: appointment.patient,
+      title: 'Appointment Cancelled',
+      text: `Your appointment with Dr. ${appointment.doctor.name} on ${appointment.date.toLocaleString()} has been cancelled.`,
+    });
+    
+    await NotificationModel.create({
+      userId: appointment.doctor,
+      title: 'Appointment Cancelled',
+      text: `Your appointment with ${appointment.patient.name} on ${appointment.date.toLocaleString()} has been cancelled.`,
+    });
 
     // Free up the doctor's slot
     const doctor = await User.findById(appointment.doctor);
