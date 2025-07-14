@@ -8,7 +8,8 @@ const {
   updateUser,
   getDoctorStats,
   deleteUserAccount,
-  setAvailability
+  setAvailability,
+  getUserAppointment
 } = require('../Controllers/UserCrtl');
 const authMiddleware = require('../MiddleWares/authMiddleware');
 
