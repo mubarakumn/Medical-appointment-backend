@@ -38,8 +38,7 @@ app.get('/api/checkauth', authMiddleware, (req, res) => {
 
 // Notifications
 app.get('/api/notifications', authMiddleware, async (req, res) => {
-  const notifications = await NotificationModel.find({ userId: req.user._id }).sort({ date: -1 });
-  console.log(notifications);
+  const notifications = await NotificationModel.find({ userId: req.user.id }).sort({ date: -1 });
   res.json(notifications);
 });
 
