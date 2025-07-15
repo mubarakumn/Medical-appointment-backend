@@ -192,7 +192,7 @@ const updateUser = async (req, res) => {
 
     // Notify the user about the update
     await NotificationModel.create({
-      userId: doctorId,
+      userId: req.user.id,
       title: 'Profile Updated',
       text: `Your profile has been updated successfully.`,
     });
